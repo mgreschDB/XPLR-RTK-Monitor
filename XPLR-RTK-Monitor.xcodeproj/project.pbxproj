@@ -7,9 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1000001 /* XPLR_RTK_MonitorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001; };
-		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002; };
-		A1000003 /* BLEManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003; };
+		A1000001 /* XPLR_RTK_MonitorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* XPLR_RTK_MonitorApp.swift */; };
+		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* ContentView.swift */; };
+		A1000003 /* BLEManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* BLEManager.swift */; };
+		A1000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000006 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +19,7 @@
 		A2000003 /* BLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEManager.swift; sourceTree = "<group>"; };
 		A2000004 /* XPLR-RTK-Monitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "XPLR-RTK-Monitor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A2000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +47,7 @@
 				A2000001 /* XPLR_RTK_MonitorApp.swift */,
 				A2000002 /* ContentView.swift */,
 				A2000003 /* BLEManager.swift */,
+				A2000006 /* Assets.xcassets */,
 				A2000005 /* Info.plist */,
 			);
 			path = "XPLR-RTK-Monitor";
@@ -63,10 +66,11 @@
 /* Begin PBXNativeTarget section */
 		A5000001 /* XPLR-RTK-Monitor */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A7000001;
+			buildConfigurationList = A7000001 /* Build configuration list for PBXNativeTarget "XPLR-RTK-Monitor" */;
 			buildPhases = (
 				A6000001 /* Sources */,
 				A3000001 /* Frameworks */,
+				A6000002 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -74,7 +78,7 @@
 			);
 			name = "XPLR-RTK-Monitor";
 			productName = "XPLR-RTK-Monitor";
-			productReference = A2000004;
+			productReference = A2000004 /* XPLR-RTK-Monitor.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -87,7 +91,7 @@
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 			};
-			buildConfigurationList = A7000003;
+			buildConfigurationList = A7000003 /* Build configuration list for PBXProject "XPLR-RTK-Monitor" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -96,23 +100,34 @@
 				Base,
 			);
 			mainGroup = A4000001;
-			productRefGroup = A4000003;
+			productRefGroup = A4000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A5000001,
+				A5000001 /* XPLR-RTK-Monitor */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A6000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000004 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A6000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1000001,
-				A1000002,
-				A1000003,
+				A1000001 /* XPLR_RTK_MonitorApp.swift in Sources */,
+				A1000002 /* ContentView.swift in Sources */,
+				A1000003 /* BLEManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,10 +140,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Q774A7FAY4;
 				INFOPLIST_FILE = "XPLR-RTK-Monitor/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mgresch.XPLR-RTK-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -143,10 +161,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Q774A7FAY4;
 				INFOPLIST_FILE = "XPLR-RTK-Monitor/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mgresch.XPLR-RTK-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -192,26 +213,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A7000001 /* Build configuration list for PBXNativeTarget */ = {
+		A7000001 /* Build configuration list for PBXNativeTarget "XPLR-RTK-Monitor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A9000001,
-				A9000002,
+				A9000001 /* Debug */,
+				A9000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A7000003 /* Build configuration list for PBXProject */ = {
+		A7000003 /* Build configuration list for PBXProject "XPLR-RTK-Monitor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A9000003,
-				A9000004,
+				A9000003 /* Debug */,
+				A9000004 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
-	rootObject = A8000001;
+	rootObject = A8000001 /* Project object */;
 }

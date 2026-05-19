@@ -1,0 +1,12 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace
+xcuserdata/
+
+# macOS
+.DS_Store
+
+# Generated (can be regenerated with generate_markers.py)
+# Keep the PNGs in git so others don't need Pillow

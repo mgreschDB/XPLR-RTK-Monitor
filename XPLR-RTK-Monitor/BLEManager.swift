@@ -17,6 +17,11 @@ class BLEManager: NSObject, ObservableObject {
     @Published var longitude: Double = 0.0
     @Published var lastGGA = ""
     @Published var discoveredDevices: [CBPeripheral] = []
+    @Published var ntripActive = false
+    @Published var heading: Double = 0.0  // degrees, 0 = north
+    
+    private var prevLatitude: Double = 0
+    private var prevLongitude: Double = 0
     
     // MARK: - BLE UUIDs
     private let serviceUUID = CBUUID(string: "12345678-1234-1234-1234-123456789ABC")
@@ -33,6 +38,8 @@ class BLEManager: NSObject, ObservableObject {
     // MARK: - Commands
     static let CMD_SHUTDOWN: UInt8 = 0x01
     static let CMD_RESTART: UInt8 = 0x02
+    static let CMD_NTRIP_START: UInt8 = 0x03
+    static let CMD_NTRIP_STOP: UInt8 = 0x04
     
     override init() {
         super.init()
@@ -45,7 +52,8 @@ class BLEManager: NSObject, ObservableObject {
         guard centralManager.state == .poweredOn else { return }
         isScanning = true
         discoveredDevices = []
-        centralManager.scanForPeripherals(withServices: [serviceUUID], options: nil)
+        // Scan for all BLE devices (filter by name after discovery)
+        centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
         statusText = "Scanning..."
     }
     
@@ -73,17 +81,28 @@ class BLEManager: NSObject, ObservableObject {
         sendCommand(BLEManager.CMD_RESTART)
     }
     
+    func sendNtripStart() {
+        sendCommand(BLEManager.CMD_NTRIP_START)
+        ntripActive = true
+    }
+    
+    func sendNtripStop() {
+        sendCommand(BLEManager.CMD_NTRIP_STOP)
+        ntripActive = false
+    }
+    
     private func sendCommand(_ cmd: UInt8) {
         guard let characteristic = controlCharacteristic,
               let peripheral = connectedPeripheral else { return }
         let data = Data([cmd])
-        peripheral.writeValue(data, for: characteristic, type: .withoutResponse)
+        peripheral.writeValue(data, for: characteristic, type: .withResponse)
     }
     
     // MARK: - NMEA Parsing
     
     private func parseGGA(_ sentence: String) {
         // $GNGGA,065317.30,5112.5413989,N,00658.6641966,E,1,05,4.23,146.882,M,...
+        print("[NMEA] \(sentence)")
         let parts = sentence.components(separatedBy: ",")
         guard parts.count >= 10, parts[0].hasSuffix("GGA") else { return }
         
@@ -123,6 +142,22 @@ class BLEManager: NSObject, ObservableObject {
             satellites = sats
         }
         
+        // Calculate heading from movement
+        if prevLatitude != 0 && prevLongitude != 0 {
+            let dLat = latitude - prevLatitude
+            let dLon = longitude - prevLongitude
+            // Only update heading if we moved enough (avoid jitter when stationary)
+            let distance = sqrt(dLat * dLat + dLon * dLon)
+            if distance > 0.000001 {  // ~0.1m
+                let rad = atan2(dLon * cos(latitude * .pi / 180), dLat)
+                var deg = rad * 180.0 / .pi
+                if deg < 0 { deg += 360 }
+                heading = deg
+            }
+        }
+        prevLatitude = latitude
+        prevLongitude = longitude
+        
         lastGGA = sentence
     }
     
@@ -157,6 +192,8 @@ extension BLEManager: CBCentralManagerDelegate {
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
                         advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        // Only show devices with "XPLR" in the name
+        guard let name = peripheral.name, name.contains("XPLR") else { return }
         if !discoveredDevices.contains(where: { $0.identifier == peripheral.identifier }) {
             discoveredDevices.append(peripheral)
         }
@@ -225,21 +262,33 @@ extension BLEManager: CBPeripheralDelegate {
             // NMEA data comes in chunks, reassemble
             if let chunk = String(data: data, encoding: .utf8) {
                 nmeaBuffer += chunk
-                // Process complete sentences
-                while let range = nmeaBuffer.range(of: "\r\n") {
-                    let sentence = String(nmeaBuffer[nmeaBuffer.startIndex..<range.lowerBound])
-                    nmeaBuffer = String(nmeaBuffer[range.upperBound...])
+                // Process complete sentences (look for $ as start marker)
+                while let startRange = nmeaBuffer.range(of: "$"),
+                      let endRange = nmeaBuffer.range(of: "\r\n", range: startRange.lowerBound..<nmeaBuffer.endIndex) {
+                    let sentence = String(nmeaBuffer[startRange.lowerBound..<endRange.lowerBound])
+                    nmeaBuffer = String(nmeaBuffer[endRange.upperBound...])
                     if sentence.contains("GGA") {
                         DispatchQueue.main.async {
                             self.parseGGA(sentence)
                         }
                     }
                 }
-                // Also try without \r\n (single chunk GGA)
-                if nmeaBuffer.contains("GGA") && nmeaBuffer.contains("*") {
-                    DispatchQueue.main.async {
-                        self.parseGGA(self.nmeaBuffer)
+                // Fallback: if buffer has a complete GGA without \r\n (end of transmission)
+                if nmeaBuffer.contains("$") && nmeaBuffer.contains("GGA") && nmeaBuffer.contains("*") {
+                    if let starIdx = nmeaBuffer.firstIndex(of: "$") {
+                        let sentence = String(nmeaBuffer[starIdx...])
+                        // Check if checksum is complete (2 hex chars after *)
+                        if let astIdx = sentence.lastIndex(of: "*"),
+                           sentence.distance(from: astIdx, to: sentence.endIndex) >= 3 {
+                            DispatchQueue.main.async {
+                                self.parseGGA(sentence)
+                            }
+                            nmeaBuffer = ""
+                        }
                     }
+                }
+                // Prevent buffer overflow
+                if nmeaBuffer.count > 1024 {
                     nmeaBuffer = ""
                 }
             }
