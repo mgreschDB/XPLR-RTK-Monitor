@@ -130,8 +130,8 @@ class BLEManager: NSObject, ObservableObject {
             case 0: fixType = "NoFix"
             case 1: fixType = "3D"
             case 2: fixType = "DGPS"
-            case 4: fixType = "RTK-Fixed"
-            case 5: fixType = "RTK-Float"
+            case 4: fixType = "RTK-Fixed"; ntripActive = true
+            case 5: fixType = "RTK-Float"; ntripActive = true
             case 6: fixType = "DR"
             default: fixType = "Unknown"
             }
@@ -170,6 +170,11 @@ class BLEManager: NSObject, ObservableObject {
         satellites = Int(parts[1]) ?? 0
         accuracy = (Double(parts[2]) ?? 0) / 1000.0  // mm to m
         speed = Double(parts[3]) ?? 0.0
+        
+        // Infer NTRIP status from fix type
+        if fixType == "RTK-Fixed" || fixType == "RTK-Float" {
+            ntripActive = true
+        }
     }
 }
 
