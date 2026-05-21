@@ -23,6 +23,12 @@ class BLEManager: NSObject, ObservableObject {
     private var prevLatitude: Double = 0
     private var prevLongitude: Double = 0
     
+    // Speed & accuracy smoothing
+    private var speedHistory: [Double] = []
+    private var accuracyHistory: [Double] = []
+    private let smoothingWindow = 5
+    private let maxRealisticSpeed: Double = 350.0  // km/h max filter
+    
     // MARK: - BLE UUIDs
     private let serviceUUID = CBUUID(string: "12345678-1234-1234-1234-123456789ABC")
     private let nmeaCharUUID = CBUUID(string: "12345678-1234-1234-1234-123456780001")
@@ -148,11 +154,18 @@ class BLEManager: NSObject, ObservableObject {
             let dLon = longitude - prevLongitude
             // Only update heading if we moved enough (avoid jitter when stationary)
             let distance = sqrt(dLat * dLat + dLon * dLon)
-            if distance > 0.000001 {  // ~0.1m
+            if distance > 0.000001 && distance < 0.01 {
+                // Filter: ignore jumps > ~1km (position spike)
                 let rad = atan2(dLon * cos(latitude * .pi / 180), dLat)
                 var deg = rad * 180.0 / .pi
                 if deg < 0 { deg += 360 }
                 heading = deg
+            } else if distance >= 0.01 {
+                // Position spike detected - don't update heading or position
+                // Keep previous valid position
+                latitude = prevLatitude
+                longitude = prevLongitude
+                return
             }
         }
         prevLatitude = latitude
@@ -168,8 +181,25 @@ class BLEManager: NSObject, ObservableObject {
         
         fixType = parts[0]
         satellites = Int(parts[1]) ?? 0
-        accuracy = (Double(parts[2]) ?? 0) / 1000.0  // mm to m
-        speed = Double(parts[3]) ?? 0.0
+        
+        // Accuracy smoothing (moving average)
+        let rawAccuracy = (Double(parts[2]) ?? 0) / 1000.0  // mm to m
+        accuracyHistory.append(rawAccuracy)
+        if accuracyHistory.count > smoothingWindow {
+            accuracyHistory.removeFirst()
+        }
+        accuracy = accuracyHistory.reduce(0, +) / Double(accuracyHistory.count)
+        
+        // Speed filtering + smoothing
+        let rawSpeed = Double(parts[3]) ?? 0.0
+        if rawSpeed <= maxRealisticSpeed {
+            speedHistory.append(rawSpeed)
+            if speedHistory.count > smoothingWindow {
+                speedHistory.removeFirst()
+            }
+            speed = speedHistory.reduce(0, +) / Double(speedHistory.count)
+        }
+        // else: ignore unrealistic speed spike
         
         // Infer NTRIP status from fix type
         if fixType == "RTK-Fixed" || fixType == "RTK-Float" {
@@ -219,6 +249,10 @@ extension BLEManager: CBCentralManagerDelegate {
         statusText = "Disconnected"
         fixType = "NoFix"
         satellites = 0
+        speedHistory = []
+        accuracyHistory = []
+        speed = 0
+        accuracy = 0
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
